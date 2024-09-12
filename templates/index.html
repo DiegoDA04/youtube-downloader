@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador de YouTube</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #007bff;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], select, input[type="submit"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .quality-select {
+            display: none;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Descargador de YouTube</h1>
+        <form action="/" method="post">
+            <label for="link">Enlace de YouTube:</label>
+            <input type="text" id="link" name="link" required>
+            <br>
+            <label for="download_type">Tipo de descarga:</label>
+            <select id="download_type" name="download_type" required>
+                <option value="audio">Audio</option>
+                <option value="video">Video</option>
+            </select>
+            <br>
+            <label for="quality" class="quality-select">Calidad del video (solo si eliges video):</label>
+            <select id="quality" name="quality" class="quality-select">
+                <option value="">Seleccionar</option>
+                <!-- Las opciones serán llenadas dinámicamente por el backend -->
+            </select>
+            <br>
+            <input type="submit" value="Descargar">
+        </form>
+        <div class="error" id="error-message"></div>
+    </div>
+
+    <script>
+        document.getElementById('download_type').addEventListener('change', function() {
+            var qualitySelect = document.getElementById('quality');
+            var qualityLabel = document.querySelector('label[for="quality"]');
+            if (this.value === 'video') {
+                fetch('/qualities?link=' + encodeURIComponent(document.getElementById('link').value))
+                    .then(response => response.json())
+                    .then(data => {
+                        qualitySelect.innerHTML = '<option value="">Seleccionar</option>';
+                        data.forEach(quality => {
+                            qualitySelect.innerHTML += `<option value="${quality.res}">${quality.res} (${quality.fps} FPS)</option>`;
+                        });
+                        qualitySelect.classList.remove('quality-select');
+                        qualityLabel.classList.remove('quality-select');
+                    });
+            } else {
+                qualitySelect.classList.add('quality-select');
+                qualityLabel.classList.add('quality-select');
+            }
+        });
+    </script>
+</body>
+</html>
