@@ -1,10 +1,9 @@
 from flask import Flask, request, render_template, send_file, jsonify
 from pytubefix import YouTube
-import os
+import requests
+import io
 
 app = Flask(__name__)
-#DOWNLOAD_FOLDER = 'downloads'
-#os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -17,20 +16,27 @@ def index():
             return "Por favor ingresa un enlace válido.", 400
         
         try:
+            # Use requests with headers to avoid bot detection
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+            }
+            response = requests.get(link, headers=headers)
+            
+            if response.status_code != 200:
+                return "No se pudo acceder al video.", 400
+            
             yt = YouTube(link)
             stream = None
             
             if download_type == 'audio':
                 stream = yt.streams.get_audio_only()
-                file_path = stream.download(mp3 = True)
+                file_path = stream.download(filename_prefix="audio_")
             elif download_type == 'video':
                 if quality:
-                    # Filter by resolution and FPS
                     stream = yt.streams.filter(progressive=True, file_extension='mp4', resolution=quality).first()
                 else:
-                    # Fallback to default if no quality is selected
                     stream = yt.streams.filter(progressive=True, file_extension='mp4').first()
-                file_path = stream.download()
+                file_path = stream.download(filename_prefix="video_")
             else:
                 return "Tipo de descarga no válido.", 400
 
